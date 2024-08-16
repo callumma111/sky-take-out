@@ -9,12 +9,14 @@ import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.dto.EmployeePageQueryDTO;
+import com.sky.dto.PasswordEditDTO;
 import com.sky.entity.Employee;
 import com.sky.exception.AccountLockedException;
 import com.sky.exception.AccountNotFoundException;
 import com.sky.exception.PasswordErrorException;
 import com.sky.mapper.EmployeeMapper;
 import com.sky.result.PageResult;
+import com.sky.result.Result;
 import com.sky.service.EmployeeService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,6 +139,32 @@ public class EmployeeServiceImpl implements EmployeeService {
 //        employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.update(employee);
+    }
+
+    /*
+    * 修改密码
+    * */
+    @Override
+    public Result editPassword(PasswordEditDTO passwordEditDTO) {
+
+        //jwt令牌获取用户id
+        Long empId = BaseContext.getCurrentId();
+
+        //DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes())
+        String newPassword = DigestUtils.md5DigestAsHex(passwordEditDTO.getNewPassword().getBytes());
+        String oldPassword = DigestUtils.md5DigestAsHex(passwordEditDTO.getOldPassword().getBytes());
+
+        Employee oldEmployee = employeeMapper.getById(empId);
+
+        if (oldEmployee.getPassword().equals(oldPassword)){
+            Employee newEmployee = new Employee();
+            BeanUtils.copyProperties(oldEmployee,newEmployee);
+            newEmployee.setPassword(newPassword);
+            employeeMapper.update(newEmployee);
+            return Result.success();
+        }else {
+            return Result.error("密码错误");
+        }
     }
 
 }
